@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yaya - Status</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Courier New', monospace;
+    background: #1a1015;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  .game {
+    width: 390px;
+    height: 693px;
+    border: 6px solid #c9a85f;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 0 2px #1a1015, 0 10px 40px rgba(0,0,0,0.6);
+  }
+
+  .bg-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    filter: brightness(0.85);
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(40,15,30,0.15) 0%, rgba(40,15,30,0.05) 40%, rgba(30,10,20,0.55) 100%);
+  }
+
+  /* Top date/level bar */
+  .topbar {
+    position: relative; z-index: 2;
+    background: rgba(45, 20, 30, 0.85);
+    border: 2px solid #c9a85f;
+    border-radius: 4px;
+    margin: 10px;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #f0d8b8;
+    backdrop-filter: blur(2px);
+  }
+  .topbar .day { font-size: 18px; font-weight: bold; color: #fff; }
+
+  .panel {
+    position: relative; z-index: 2;
+    margin: 8px 10px;
+    background: rgba(45, 20, 30, 0.82);
+    border: 2px solid #c9a85f;
+    border-radius: 4px;
+    padding: 10px 12px;
+    color: #f0d8b8;
+    font-size: 11px;
+    width: 230px;
+    backdrop-filter: blur(2px);
+  }
+  .panel .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(201,168,95,0.2);
+  }
+  .panel .row:last-child { border-bottom: none; }
+  .panel .row span:first-child { color: #d8b8c8; }
+  .panel .row span:last-child { color: #fff; font-weight: bold; }
+  .panel-title {
+    color: #f5c873;
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .stat-panel {
+    position: relative; z-index: 2;
+    margin: 8px 10px;
+    background: rgba(45, 20, 30, 0.82);
+    border: 2px solid #c9a85f;
+    border-radius: 4px;
+    padding: 10px 12px;
+    width: 230px;
+    backdrop-filter: blur(2px);
+  }
+  .stat-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 10px;
+    color: #f0d8b8;
+  }
+  .stat-line:last-child { margin-bottom: 0; }
+  .stat-name { width: 50px; }
+  .bar-bg {
+    flex: 1;
+    height: 8px;
+    background: #1a1015;
+    border: 1px solid #c9a85f;
+  }
+  .bar-fill { height: 100%; }
+  .bar-fill.stable { background: linear-gradient(90deg,#b794e0,#8a4fbb); width: 72%; }
+  .bar-fill.energy { background: linear-gradient(90deg,#f7c873,#e0a040); width: 55%; }
+  .bar-fill.conf { background: linear-gradient(90deg,#f5a3c7,#e06090); width: 40%; }
+  .stat-pct { width: 28px; text-align: right; }
+
+  /* Right-side floating panel */
+  .side-panel {
+    position: absolute;
+    top: 70px; right: 10px;
+    z-index: 2;
+    background: rgba(45, 20, 30, 0.82);
+    border: 2px solid #c9a85f;
+    border-radius: 4px;
+    padding: 8px 10px;
+    color: #f0d8b8;
+    font-size: 10px;
+    width: 110px;
+    backdrop-filter: blur(2px);
+  }
+  .side-panel .gift {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 4px;
+    animation: pop 1.8s ease-in-out infinite;
+  }
+  @keyframes pop { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+  .side-panel .label { text-align:center; color:#f5c873; font-weight:bold; }
+
+  .quest-panel {
+    position: relative; z-index: 2;
+    margin: 8px 10px;
+    background: rgba(45, 20, 30, 0.82);
+    border: 2px solid #c9a85f;
+    border-radius: 4px;
+    padding: 10px 12px;
+    width: 230px;
+    font-size: 10px;
+    color: #f0d8b8;
+    backdrop-filter: blur(2px);
+  }
+  .quest-panel .row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .quest-bar { display:flex; gap: 1px; height: 8px; }
+  .quest-bar .seg { flex: 1; background: #1a1015; border: 1px solid #c9a85f; }
+  .quest-bar .seg.on { background: #f5b8d0; }
+
+  .inv-row {
+    position: relative; z-index: 2;
+    margin: 8px 10px;
+    display: flex;
+    gap: 6px;
+  }
+  .inv-slot {
+    width: 36px; height: 36px;
+    background: rgba(45,20,30,0.82);
+    border: 2px solid #c9a85f;
+    border-radius: 4px;
+    display: flex; align-items:center; justify-content:center;
+    font-size: 16px;
+    backdrop-filter: blur(2px);
+  }
+
+  .action-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    z-index: 3;
+    background: linear-gradient(0deg, rgba(26,16,21,0.95), rgba(42,22,32,0.7));
+    border-top: 2px solid #c9a85f;
+    padding: 10px;
+    display: flex;
+    gap: 6px;
+  }
+  .action-bar input {
+    flex: 1;
+    background: rgba(26,16,21,0.9);
+    border: 2px solid #c9a85f;
+    color: #f0d8b8;
+    font-family: inherit;
+    font-size: 11px;
+    padding: 6px 10px;
+    outline: none;
+  }
+  .action-bar input::placeholder { color: #9a7a8a; }
+  .action-btn {
+    width: 34px; height: 34px;
+    background: linear-gradient(180deg, #5a2a3a, #4a1f2e);
+    border: 2px solid #c9a85f;
+    color: #f5c873;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .chat-bubble {
+    position: absolute;
+    z-index: 2;
+    bottom: 70px; left: 10px;
+    background: rgba(255,255,255,0.92);
+    border: 2px solid #c9a85f;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #6b4a8a;
+    max-width: 220px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <img class="bg-photo" src="yaya_photo.png" alt="Yaya">
+  <div class="scrim"></div>
+
+  <div class="topbar">
+    <div>
+      <div style="font-size:9px; color:#d8b8c8;">2026 · JUN 13</div>
+      <div class="day">DAY 12</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:9px; color:#d8b8c8;">LEVEL</div>
+      <div class="day">4</div>
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="gift">🎁</div>
+    <div class="label">+1 선물</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">◆ YAYA STATUS</div>
+    <div class="row"><span>오늘의 기분</span><span>차분함 🌙</span></div>
+    <div class="row"><span>연속 출석</span><span>12일</span></div>
+    <div class="row"><span>대화 횟수</span><span>147회</span></div>
+  </div>
+
+  <div class="stat-panel">
+    <div class="stat-line">
+      <div class="stat-name">안정감</div>
+      <div class="bar-bg"><div class="bar-fill stable"></div></div>
+      <div class="stat-pct">72%</div>
+    </div>
+    <div class="stat-line">
+      <div class="stat-name">활력</div>
+      <div class="bar-bg"><div class="bar-fill energy"></div></div>
+      <div class="stat-pct">55%</div>
+    </div>
+    <div class="stat-line">
+      <div class="stat-name">자존감</div>
+      <div class="bar-bg"><div class="bar-fill conf"></div></div>
+      <div class="stat-pct">40%</div>
+    </div>
+  </div>
+
+  <div class="quest-panel">
+    <div class="row"><span>📊 감정 리포트</span><span>7 / 10</span></div>
+    <div class="quest-bar">
+      <div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div>
+      <div class="seg on"></div><div class="seg on"></div><div class="seg on"></div>
+      <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+    </div>
+  </div>
+
+  <div class="inv-row">
+    <div class="inv-slot">🍪</div>
+    <div class="inv-slot">🌸</div>
+    <div class="inv-slot">⭐</div>
+    <div class="inv-slot">🎀</div>
+  </div>
+
+  <div class="chat-bubble">오늘 하루 어땠어? 듣고 싶어 💜</div>
+
+  <div class="action-bar">
+    <div class="action-btn">🎙️</div>
+    <input type="text" placeholder="Yaya에게 오늘 기분을 말해줘...">
+    <div class="action-btn">➤</div>
+  </div>
+
+</div>
+</body>
+</html>

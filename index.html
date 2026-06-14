@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yaya App Dashboard v3</title>
+  <style>
+    /* 웹폰트 로드 및 전체 초기화 */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #140711;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Noto Sans KR', sans-serif;
+      color: #fffbfa;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* 프리미엄 모바일 프레임 디바이스 디자인 */
+    .app-container {
+      position: relative;
+      width: 393px; 
+      height: 852px; 
+      background: url('yaya.PNG') no-repeat center center;
+      background-size: cover;
+      border: 6px solid #caa460; /* 레퍼런스 특유의 톤다운된 골드 베젤 */
+      border-radius: 45px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.75), inset 0 0 20px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* 인앱 가림막 레이어 (가독성 향상용 비주얼 장치) */
+    .app-container::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to bottom, rgba(20, 7, 17, 0.2) 0%, rgba(20, 7, 17, 0.5) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* 최상단 시스템 타이틀 라인 */
+    .top-status-bar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px 10px 24px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #e6cfe6;
+    }
+    
+    .status-badge {
+      background: rgba(202, 164, 96, 0.25);
+      border: 1px solid rgba(202, 164, 96, 0.6);
+      padding: 3px 10px;
+      border-radius: 20px;
+      color: #f7dfb6;
+      font-size: 11px;
+    }
+
+    /* 반투명 유리창 대시보드 그리드 영역 */
+    .dashboard-grid {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 0 16px;
+      margin-top: 5px;
+    }
+
+    .glass-card {
+      background: rgba(36, 17, 33, 0.2);
+      border: 1px solid rgba(202, 164, 96, 0.3);
+      border-radius: 16px;
+      padding: 12px;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      box-shadow: none;
+    }
+    
+    .card-title {
+      font-size: 12px;
+      color: #ffbfe0;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    /* 게이지 및 스태터스 스타일 레이아웃 */
+    .status-item {
+      font-size: 12px;
+      margin-bottom: 6px;
+      color: #ebd1e0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .gauge-row {
+      margin-bottom: 8px;
+    }
+    
+    .gauge-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #f2e2ec;
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+    
+    .gauge-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 0.5px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .gauge-fill {
+      height: 100%;
+      border-radius: 10px;
+      box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    }
+
+    /* 중단 좌측: 가장 중요한 리마인드 알림 보드 */
+    .critical-remind-board {
+      position: absolute;
+      left: 16px;
+      bottom: 165px;
+      width: 180px;
+      z-index: 10;
+      background: rgba(51, 29, 23, 0.88);
+      border: 2px solid #caa460;
+      border-radius: 14px;
+      padding: 8px 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+    
+    .board-header {
+      color: #ffd700;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+    
+    .board-body {
+      font-size: 11px;
+      line-height: 1.4;
+      color: #f7ebe1;
+      font-weight: 400;
+    }
+    
+    .board-body span {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    /* 중단 우측: 16비트 그래픽스 독립형 레이어 */
+    .pixel-character-box {
+      position: absolute;
+      right: 5px;
+      bottom: 115px;
+      z-index: 5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: charBob 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes charBob {
+      0%   { transform: translateY(0px); }
+      100% { transform: translateY(-10px); }
+    }
+    
+    .pixel-character-box img {
+      width: 145px; /* 원본 도트가 이쁘게 매칭되는 스케일 비율 */
+      height: auto;
+      image-rendering: pixelated; /* 크롬/사파리 최적화 도트 깨짐 방지 필터 */
+      image-rendering: crisp-edges;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
+    }
+
+    /* 떠다니는 보상 아이템들 */
+    .floating-items {
+      position: absolute;
+      right: 0px;
+      bottom: 60px;
+      width: 200px;
+      height: 300px;
+      z-index: 6;
+      pointer-events: none;
+    }
+    .float-item {
+      position: absolute;
+      font-size: 22px;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      animation-direction: alternate;
+    }
+    @keyframes float1 { 0%{transform:translateY(0) rotate(-5deg);} 100%{transform:translateY(-10px) rotate(5deg);} }
+    @keyframes float2 { 0%{transform:translateY(0) rotate(3deg);} 100%{transform:translateY(-12px) rotate(-4deg);} }
+    @keyframes float3 { 0%{transform:translateY(0) rotate(-8deg);} 100%{transform:translateY(-8px) rotate(6deg);} }
+    @keyframes float4 { 0%{transform:translateY(0) rotate(5deg);} 100%{transform:translateY(-14px) rotate(-3deg);} }
+    @keyframes float5 { 0%{transform:translateY(0) rotate(-3deg);} 100%{transform:translateY(-9px) rotate(7deg);} }
+    @keyframes float6 { 0%{transform:translateY(0) rotate(6deg);} 100%{transform:translateY(-11px) rotate(-5deg);} }
+    @keyframes float7 { 0%{transform:translateY(0) rotate(-4deg);} 100%{transform:translateY(-13px) rotate(4deg);} }
+
+    /* 최하단 사용자 챗 및 인터랙션 컨트롤러 */
+    .bottom-interface-layer {
+      position: absolute;
+      bottom: 24px;
+      left: 0;
+      width: 100%;
+      padding: 0 16px;
+      box-sizing: border-box;
+      z-index: 15;
+    }
+    
+    .chat-log {
+      max-height: 160px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+      scrollbar-width: none;
+    }
+    .chat-log::-webkit-scrollbar { display: none; }
+
+    .chat-bubble {
+      max-width: 78%;
+      padding: 8px 12px;
+      border-radius: 14px;
+      font-size: 12.5px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .chat-bubble.yaya {
+      align-self: flex-start;
+      background: rgba(36, 17, 33, 0.65);
+      border: 1px solid rgba(202,164,96,0.25);
+      color: #ffc2e2;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: rgba(202, 164, 96, 0.25);
+      border: 1px solid rgba(202,164,96,0.5);
+      color: #fffbfa;
+      border-bottom-right-radius: 4px;
+    }
+    .thinking-dots {
+      animation: pulse 1s infinite;
+    }
+
+    .voice-input-frame {
+      background: rgba(26, 12, 21, 0.85);
+      border: 1.5px solid #6e3d60;
+      border-radius: 28px;
+      padding: 12px 20px;
+      font-size: 13px;
+      color: #caaec1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .mic-icon {
+      font-size: 14px;
+      cursor: pointer;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+    .mic-icon:hover {
+      opacity: 1;
+    }
+
+    .voice-input-frame input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+      color: #fffbfa;
+      padding: 0;
+      margin-right: 8px;
+    }
+    .voice-input-frame input::placeholder {
+      color: #caaec1;
+    }
+    .voice-input-frame input:disabled {
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <div class="top-status-bar">
+      <div>2026 • JUN 13</div>
+      <div class="status-badge" id="dayBadge">DAY 12 ✓</div>
+      <div class="status-badge">LEVEL 4</div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="glass-card">
+        <div class="card-title">✦ YAYA STATUS</div>
+        <div class="status-item">Mood <span style="margin-left: auto;">😊</span></div>
+        <div class="status-item">Check-in <span style="margin-left: auto; color: #caa460;">✓</span></div>
+        <div class="status-item">Chats <span style="margin-left: auto;">💬</span></div>
+      </div>
+      
+      <div class="glass-card">
+        <div class="card-title">📊 Emotional Report</div>
+        <div class="gauge-row">
+          <div class="gauge-label"><span>Quest</span><span>7/10</span></div>
+          <div class="gauge-bg"><div class="gauge-fill" style="width: 70%; background: #caa460;"></div></div>
+        </div>
+        <div class="gauge-row">
+          <div class="gauge-label"><span>Confidence</span><span>40%</span></div>
+          <div class="gauge-bg"><div class="gauge-fill" style="width: 40%; background: #ff7597;"></div></div>
+        </div>
+        <!-- 유니콘 포인트 -->
+        <div style="display:flex; align-items:center; justify-content:flex-end; margin-top:8px; gap:4px;">
+          <span style="font-size:16px;">🦄</span>
+          <span style="font-size:13px; font-weight:700; color:#f7dfb6;">× 24</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Yaya 아나토미 스탯 -->
+    <div style="
+      position: absolute;
+      left: 16px;
+      bottom: 310px;
+      width: 180px;
+      z-index: 10;
+      background: rgba(36, 17, 33, 0.2);
+      border: 1px solid rgba(202, 164, 96, 0.3);
+      border-radius: 10px;
+      padding: 8px 10px;
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    ">
+      <!-- Yaya 실루엣 -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 160" width="52" height="104" style="flex-shrink:0;">
+        <!-- 머리 (Stability - 보라) -->
+        <ellipse cx="20" cy="14" rx="7" ry="14" fill="#7b5fc2" opacity="0.85"/>
+        <ellipse cx="60" cy="14" rx="7" ry="14" fill="#7b5fc2" opacity="0.85"/>
+        <ellipse cx="40" cy="20" rx="14" ry="14" fill="#7b5fc2" opacity="0.9"/>
+        <!-- 상체 (Resilience - 청록) -->
+        <rect x="22" y="34" width="36" height="36" rx="6" fill="#06b6d4" opacity="0.85"/>
+        <rect x="12" y="36" width="10" height="26" rx="4" fill="#06b6d4" opacity="0.8"/>
+        <rect x="58" y="36" width="10" height="26" rx="4" fill="#06b6d4" opacity="0.8"/>
+        <!-- 복부 (Self-Worth - 핑크) -->
+        <rect x="22" y="70" width="36" height="30" rx="4" fill="#f472b6" opacity="0.85"/>
+        <rect x="12" y="62" width="10" height="20" rx="4" fill="#f472b6" opacity="0.75"/>
+        <rect x="58" y="62" width="10" height="20" rx="4" fill="#f472b6" opacity="0.75"/>
+        <!-- 다리 (Growth - 연두) -->
+        <rect x="22" y="100" width="16" height="44" rx="5" fill="#84cc16" opacity="0.85"/>
+        <rect x="42" y="100" width="16" height="44" rx="5" fill="#84cc16" opacity="0.85"/>
+        <rect x="20" y="140" width="18" height="10" rx="3" fill="#84cc16" opacity="0.95"/>
+        <rect x="42" y="140" width="18" height="10" rx="3" fill="#84cc16" opacity="0.95"/>
+        <!-- 외곽선 -->
+        <ellipse cx="20" cy="14" rx="7" ry="14" fill="none" stroke="rgba(202,164,96,0.5)" stroke-width="1.5"/>
+        <ellipse cx="60" cy="14" rx="7" ry="14" fill="none" stroke="rgba(202,164,96,0.5)" stroke-width="1.5"/>
+        <ellipse cx="40" cy="20" rx="14" ry="14" fill="none" stroke="rgba(202,164,96,0.5)" stroke-width="1.5"/>
+        <rect x="22" y="34" width="36" height="66" rx="4" fill="none" stroke="rgba(202,164,96,0.4)" stroke-width="1.5"/>
+        <rect x="12" y="36" width="10" height="46" rx="4" fill="none" stroke="rgba(202,164,96,0.4)" stroke-width="1.5"/>
+        <rect x="58" y="36" width="10" height="46" rx="4" fill="none" stroke="rgba(202,164,96,0.4)" stroke-width="1.5"/>
+        <rect x="22" y="100" width="16" height="44" rx="5" fill="none" stroke="rgba(202,164,96,0.4)" stroke-width="1.5"/>
+        <rect x="42" y="100" width="16" height="44" rx="5" fill="none" stroke="rgba(202,164,96,0.4)" stroke-width="1.5"/>
+        <!-- 구분선 -->
+        <line x1="10" y1="34" x2="70" y2="34" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" stroke-dasharray="2,2"/>
+        <line x1="10" y1="70" x2="70" y2="70" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" stroke-dasharray="2,2"/>
+        <line x1="10" y1="100" x2="70" y2="100" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" stroke-dasharray="2,2"/>
+      </svg>
+      <!-- 라벨 -->
+      <div style="display:flex; flex-direction:column; gap:8px; font-size:9px; flex:1;">
+        <div style="color:#b794e0;">🧘 Stability <span style="float:right; color:#f2e2ec;">72%</span></div>
+        <div style="color:#67e8f9;">💪 Resilience <span style="float:right; color:#f2e2ec;">58%</span></div>
+        <div style="color:#f9a8d4;">💗 Self-Worth <span style="float:right; color:#f2e2ec;">40%</span></div>
+        <div style="color:#bef264;">🌱 Growth <span style="float:right; color:#f2e2ec;">63%</span></div>
+      </div>
+    </div>
+
+    <div class="critical-remind-board">
+      <div class="board-header">**가장 중요한 리마인드**</div>
+      <div class="board-body">
+        <span>- 나쁜 패턴 'All or Nothing' 극단성 워닝 🚨 (집중과 휴식의 균형)</span>
+        <span>- '찍어누르는 사람'에게 안정감 느끼는 'RANK 0' Authority Trap 경계 🔥 (진정한 존중 관계 추구)</span>
+      </div>
+    </div>
+
+    <div class="pixel-character-box">
+      <img src="yaya_16bit.png" alt="Yaya Digital 16bit Handheld">
+    </div>
+
+    <!-- 떠다니는 보상 아이템들 -->
+    <div class="floating-items">
+      <!-- 상단 우측 -->
+      <div class="float-item" style="top:10px; right:10px; animation: float1 2.8s infinite;">💍</div>
+      <div class="float-item" style="top:5px; right:55px; animation: float2 3.2s infinite;">⭐</div>
+      <!-- 중간 우측 -->
+      <div class="float-item" style="top:70px; right:5px; animation: float3 2.5s infinite;">🎀</div>
+      <div class="float-item" style="top:80px; right:60px; animation: float4 3.5s infinite;">👒</div>
+      <!-- 캐릭터 좌측 -->
+      <div class="float-item" style="top:130px; right:130px; animation: float5 2.9s infinite;">🧦</div>
+      <div class="float-item" style="top:55px; right:120px; animation: float6 3.1s infinite;">👗</div>
+      <!-- 하단 -->
+      <div class="float-item" style="top:200px; right:15px; animation: float7 2.6s infinite;">👓</div>
+      <div class="float-item" style="top:185px; right:80px; animation: float1 3.3s infinite;">🎁</div>
+    </div>
+
+    <!-- 감정 선택 패널 - 오른쪽 중앙 세로 -->
+    <div id="moodPanel" style="
+      position: absolute;
+      right: 12px;
+      top: calc(35% + 10px);
+      transform: translateY(-50%);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+    ">
+      <div style="font-size:9px; color:rgba(202,164,96,0.7); margin-bottom:2px; letter-spacing:1px;">MOOD</div>
+      <div class="mood-btn" style="border-color: rgba(60,180,180,0.5); background: rgba(30,120,130,0.35);" onclick="selectMood(this, '😭')">😭</div>
+      <div class="mood-btn" style="border-color: rgba(80,180,140,0.5); background: rgba(40,130,100,0.3);" onclick="selectMood(this, '😔')">😔</div>
+      <div class="mood-btn" style="border-color: rgba(160,160,100,0.4); background: rgba(100,100,60,0.25);" onclick="selectMood(this, '😐')">😐</div>
+      <div class="mood-btn" style="border-color: rgba(220,200,60,0.5); background: rgba(160,140,30,0.3);" onclick="selectMood(this, '🙂')">🙂</div>
+      <div class="mood-btn" style="border-color: rgba(255,220,30,0.6); background: rgba(200,170,20,0.35);" onclick="selectMood(this, '😄')">😄</div>
+    </div>
+
+    <!-- 선택 시 확대 오버레이 -->
+    <div id="moodOverlay" style="
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      background: rgba(10, 3, 18, 0.6);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      backdrop-filter: blur(3px);
+    ">
+      <div id="moodBig" style="font-size: 0px; transition: font-size 0.35s cubic-bezier(0.34,1.56,0.64,1);"></div>
+      <div id="moodText" style="color:#f0d8ff; font-size:14px; margin-top:16px; opacity:0; transition: opacity 0.3s 0.2s;"></div>
+    </div>
+
+    <style>
+      .mood-btn {
+        font-size: 24px;
+        cursor: pointer;
+        transition: transform 0.15s;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        background: rgba(36,17,33,0.4);
+        border: 1px solid rgba(202,164,96,0.2);
+        border-radius: 50%;
+        width: 40px; height: 40px;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .mood-btn:hover { transform: scale(1.2); }
+      .mood-btn.selected {
+        border-color: rgba(202,164,96,0.8);
+        background: rgba(202,164,96,0.2);
+      }
+    </style>
+
+    <script>
+      const moodLabels = {
+        '😭': '많이 힘드구나... 괜찮아, 말해줘 💜',
+        '😔': '좀 우울한 하루였어? 들을게',
+        '😐': '그냥저냥한 하루구나',
+        '🙂': '오, 조금 괜찮은 하루였어?',
+        '😄': '오늘 좋은 일 있었어?! ✨'
+      };
+
+      const moodColors = {
+        '😭': 'rgba(20, 80, 90, 0.7)',
+        '😔': 'rgba(20, 90, 70, 0.7)',
+        '😐': 'rgba(60, 60, 30, 0.7)',
+        '🙂': 'rgba(100, 90, 10, 0.7)',
+        '😄': 'rgba(130, 110, 0, 0.7)'
+      };
+
+      function selectMood(el, emoji) {
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+
+        const overlay = document.getElementById('moodOverlay');
+        const big = document.getElementById('moodBig');
+        const text = document.getElementById('moodText');
+
+        overlay.style.background = moodColors[emoji];
+        overlay.style.display = 'flex';
+        big.textContent = emoji;
+        text.textContent = moodLabels[emoji];
+
+        setTimeout(() => { big.style.fontSize = '120px'; text.style.opacity = '1'; }, 50);
+
+        setTimeout(() => {
+          big.style.fontSize = '0px';
+          text.style.opacity = '0';
+          setTimeout(() => { overlay.style.display = 'none'; }, 400);
+        }, 1800);
+      }
+    </script>
+
+    <!-- 잠금해제 오버레이 -->
+    <div id="unlockOverlay" style="
+      display:none;
+      position:absolute;
+      inset:0;
+      z-index:40;
+      background: rgba(10,3,18,0.85);
+      justify-content:center;
+      align-items:center;
+      flex-direction:column;
+      backdrop-filter:blur(4px);
+    ">
+      <div style="font-size:60px; animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">📊</div>
+      <div style="color:#ffd700; font-size:18px; font-weight:700; margin-top:16px;">감정 리포트 해금!</div>
+      <div style="color:#f0d8c8; font-size:12px; margin-top:8px;">오늘의 감정 패턴을 분석했어 💜</div>
+      <div style="margin-top:20px; background:rgba(202,164,96,0.2); border:1px solid #caa460; border-radius:20px; padding:10px 24px; color:#f7dfb6; font-size:13px; cursor:pointer;" onclick="closeUnlock()">리포트 보기 →</div>
+    </div>
+
+    <style>
+      @keyframes popIn { 0%{transform:scale(0);} 100%{transform:scale(1);} }
+      @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+    </style>
+
+    <script>
+      let chatHistory = [];
+
+      async function askYaya(message) {
+        chatHistory.push({ role: 'user', parts: [{ text: message }] });
+
+        const res = await fetch('/api/yaya', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ history: chatHistory })
+        });
+
+        if (!res.ok) {
+          throw new Error('API error: ' + res.status);
+        }
+
+        const data = await res.json();
+        const reply = data.reply || '음... 지금 말이 잘 안 나와 🥺';
+        chatHistory.push({ role: 'model', parts: [{ text: reply }] });
+        return reply;
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+      // 대화 카운터
+      let chatCount = 7;
+      const maxCount = 10;
+
+      function updateCounter() {
+        const el = document.getElementById('chatCounter');
+        if (chatCount >= maxCount) {
+          el.textContent = '🔓 리포트 완성!';
+          el.style.color = '#ffd700';
+          el.style.animation = 'pulse 1s infinite';
+          showUnlock();
+        } else {
+          el.textContent = chatCount + '/' + maxCount + ' 💬';
+        }
+      }
+
+      function showUnlock() {
+        const overlay = document.getElementById('unlockOverlay');
+        overlay.style.display = 'flex';
+      }
+
+      window.closeUnlock = function() {
+        document.getElementById('unlockOverlay').style.display = 'none';
+      }
+
+      // 타이핑 효과
+      function typeText(text, el, speed = 50) {
+        el.textContent = '';
+        let i = 0;
+        const timer = setInterval(() => {
+          el.textContent += text[i];
+          i++;
+          chatLog.scrollTop = chatLog.scrollHeight;
+          if (i >= text.length) clearInterval(timer);
+        }, speed);
+      }
+
+      const chatLog = document.getElementById('chatLog');
+      const userInput = document.getElementById('userInput');
+      const sendBtn = document.getElementById('sendBtn');
+
+      function appendBubble(sender) {
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ' + sender;
+        const span = document.createElement('span');
+        bubble.appendChild(span);
+        chatLog.appendChild(bubble);
+        chatLog.scrollTop = chatLog.scrollHeight;
+        return span;
+      }
+
+      async function handleSend() {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        userInput.value = '';
+        userInput.disabled = true;
+
+        appendBubble('user').textContent = message;
+        const replySpan = appendBubble('yaya');
+        replySpan.innerHTML = '<span class="thinking-dots">···</span>';
+
+        try {
+          const reply = await askYaya(message);
+          typeText(reply, replySpan, 35);
+        } catch (err) {
+          typeText('어... 지금 연결이 잘 안 되나봐 🥺 잠시 후 다시 말해줄래?', replySpan, 35);
+        } finally {
+          userInput.disabled = false;
+          userInput.focus();
+          if (chatCount < maxCount) {
+            chatCount++;
+            updateCounter();
+          }
+        }
+      }
+
+      sendBtn.addEventListener('click', handleSend);
+      userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleSend();
+      });
+      const defaultMsg = '오늘 하루 어땠어? 듣고 싶어';
+
+      // 리텐션 - 오늘 첫 방문 시 웰컴 메시지
+      const today = new Date().toDateString();
+      const lastVisit = localStorage.getItem('yaraLastVisit');
+
+      let msg = '오늘 하루 어땠어? 듣고 싶어';
+      if (lastVisit !== today) {
+        localStorage.setItem('yaraLastVisit', today);
+        const daysSince = lastVisit ? Math.floor((new Date() - new Date(lastVisit)) / 86400000) : 0;
+        if (daysSince === 1) msg = '어제 말한 거 생각하고 있었어 💜 오늘은 어때?';
+        else if (daysSince > 1) msg = daysSince + '일만이야... 보고 싶었어 🥺 잘 지냈어?';
+      }
+
+      setTimeout(() => {
+        const span = appendBubble('yaya');
+        typeText(msg, span, 45);
+      }, 600);
+      }); // DOMContentLoaded 끝
+    </script>
+
+    <div class="bottom-interface-layer">
+      <div class="chat-log" id="chatLog"></div>
+      <div class="voice-input-frame">
+        <input type="text" id="userInput" placeholder="Yaya에게 오늘 기분을 말해줘..." />
+        <span style="display:flex; align-items:center; gap:6px;">
+          <span id="chatCounter" style="font-size:11px; color:#caa460; font-weight:700;">7/10 💬</span>
+          <span class="mic-icon" id="sendBtn">🎙️</span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
