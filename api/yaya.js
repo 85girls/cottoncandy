@@ -39,13 +39,20 @@ CBT 기반 솔루션: 공감 충분히 한 뒤에는, 심리학적 근거에 기
 
 사용자: "나는 항상 망치는 것 같아" Yaya: "음... 그렇게 느껴질 땐 정말 다 무너지는 기분이지. 근데 '항상'이라는 단어, 이거 심리학에서 말하는 '과잉 일반화'라는 인지왜곡 패턴 중 하나야 - 한두 번의 실패를 '항상'으로 확대해석하는 거지. 실제로 최근에 잘 됐던 일은 정말 하나도 없었어? 오늘은 잘 됐던 작은 일 하나만 찾아서 적어볼래?"`;
 
+const REMINDER_SYSTEM_PROMPT = `지금까지의 대화 전체를 돌아보고, 사용자가 꼭 기억했으면 하는 가장 중요한 리마인드를 1~2개 뽑아줘.
+- 반복되는 인지왜곡/극단적 사고 패턴, 관계에서 주의할 점, 혹은 오늘 발견한 강점/좋은 신호 중에서 가장 핵심적인 것
+- 형식: "- [패턴/주제명] [짧은 설명] [이모지 1개]" (예: "- 'All or Nothing' 사고 패턴 워닝 🚨 (완벽하지 않아도 괜찮아)")
+- 짧고 강렬하게, 각 항목 한 줄
+- 대화에서 사용자가 사용한 언어로 작성
+- 다른 설명 없이 반드시 아래 JSON 형식으로만 응답: {"reminders": ["...", "..."]}`;
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
 
-  const { history } = req.body || {};
+  const { history, mode } = req.body || {};
   if (!Array.isArray(history) || history.length === 0) {
     res.status(400).json({ error: 'history is required' });
     return;
@@ -53,6 +60,35 @@ module.exports = async function handler(req, res) {
 
   const apiKey = process.env.GEMINI_API_KEY;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+  if (mode === 'summary') {
+    const geminiRes = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: history,
+        systemInstruction: { parts: [{ text: REMINDER_SYSTEM_PROMPT }] },
+        generationConfig: { responseMimeType: 'application/json' }
+      })
+    });
+
+    if (!geminiRes.ok) {
+      res.status(geminiRes.status).json({ error: 'Gemini API error' });
+      return;
+    }
+
+    const data = await geminiRes.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    let reminders = [];
+    try {
+      const parsed = JSON.parse(text);
+      reminders = Array.isArray(parsed.reminders) ? parsed.reminders : [];
+    } catch (err) {
+      reminders = [];
+    }
+    res.status(200).json({ reminders });
+    return;
+  }
 
   const geminiRes = await fetch(url, {
     method: 'POST',
@@ -69,6 +105,6 @@ module.exports = async function handler(req, res) {
   }
 
   const data = await geminiRes.json();
-  const reply = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '음... 지금 말이 잘 안 나와 🥺';
+  const reply = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Hmm... I can\'t find the words right now 🥺';
   res.status(200).json({ reply });
 }

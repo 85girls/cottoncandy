@@ -544,9 +544,10 @@
       backdrop-filter:blur(4px);
     ">
       <div style="font-size:60px; animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">📊</div>
-      <div style="color:#ffd700; font-size:18px; font-weight:700; margin-top:16px;">감정 리포트 해금!</div>
-      <div style="color:#f0d8c8; font-size:12px; margin-top:8px;">오늘의 감정 패턴을 분석했어 💜</div>
-      <div style="margin-top:20px; background:rgba(202,164,96,0.2); border:1px solid #caa460; border-radius:20px; padding:10px 24px; color:#f7dfb6; font-size:13px; cursor:pointer;" onclick="closeUnlock()">리포트 보기 →</div>
+      <div style="color:#ffd700; font-size:18px; font-weight:700; margin-top:16px;">Report Unlocked!</div>
+      <div style="color:#f0d8c8; font-size:12px; margin-top:8px;">I analyzed today's emotional patterns 💜</div>
+      <div id="reminderList" style="margin-top:14px; max-width:260px; color:#f7ebe1; font-size:11px; line-height:1.5; text-align:left;"></div>
+      <div style="margin-top:20px; background:rgba(202,164,96,0.2); border:1px solid #caa460; border-radius:20px; padding:10px 24px; color:#f7dfb6; font-size:13px; cursor:pointer;" onclick="closeUnlock()">View Report →</div>
     </div>
 
     <style>
@@ -571,7 +572,7 @@
         }
 
         const data = await res.json();
-        const reply = data.reply || '음... 지금 말이 잘 안 나와 🥺';
+        const reply = data.reply || "Hmm... I can't find the words right now 🥺";
         chatHistory.push({ role: 'model', parts: [{ text: reply }] });
         return reply;
       }
@@ -593,9 +594,32 @@
         }
       }
 
-      function showUnlock() {
+      async function showUnlock() {
         const overlay = document.getElementById('unlockOverlay');
         overlay.style.display = 'flex';
+
+        const reminders = await generateReminders();
+        if (reminders.length) {
+          document.getElementById('reminderList').innerHTML =
+            reminders.map(r => `<div style="margin-bottom:4px;">${r}</div>`).join('');
+          document.querySelector('.critical-remind-board .board-body').innerHTML =
+            reminders.map(r => `<span>${r}</span>`).join('');
+        }
+      }
+
+      async function generateReminders() {
+        try {
+          const res = await fetch('/api/yaya', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ history: chatHistory, mode: 'summary' })
+          });
+          if (!res.ok) return [];
+          const data = await res.json();
+          return Array.isArray(data.reminders) ? data.reminders : [];
+        } catch (err) {
+          return [];
+        }
       }
 
       window.closeUnlock = function() {
@@ -643,7 +667,7 @@
           const reply = await askYaya(message);
           typeText(reply, replySpan, 35);
         } catch (err) {
-          typeText('어... 지금 연결이 잘 안 되나봐 🥺 잠시 후 다시 말해줄래?', replySpan, 35);
+          typeText("Uh oh... I'm having trouble connecting 🥺 Can you try again in a bit?", replySpan, 35);
         } finally {
           userInput.disabled = false;
           userInput.focus();
@@ -658,18 +682,16 @@
       userInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleSend();
       });
-      const defaultMsg = '오늘 하루 어땠어? 듣고 싶어';
-
       // 리텐션 - 오늘 첫 방문 시 웰컴 메시지
       const today = new Date().toDateString();
       const lastVisit = localStorage.getItem('yaraLastVisit');
 
-      let msg = '오늘 하루 어땠어? 듣고 싶어';
+      let msg = "How was your day? I'd love to hear about it 💜";
       if (lastVisit !== today) {
         localStorage.setItem('yaraLastVisit', today);
         const daysSince = lastVisit ? Math.floor((new Date() - new Date(lastVisit)) / 86400000) : 0;
-        if (daysSince === 1) msg = '어제 말한 거 생각하고 있었어 💜 오늘은 어때?';
-        else if (daysSince > 1) msg = daysSince + '일만이야... 보고 싶었어 🥺 잘 지냈어?';
+        if (daysSince === 1) msg = "I've been thinking about what you told me yesterday 💜 How about today?";
+        else if (daysSince > 1) msg = `It's been ${daysSince} days... I missed you 🥺 How have you been?`;
       }
 
       setTimeout(() => {
@@ -682,7 +704,7 @@
     <div class="bottom-interface-layer">
       <div class="chat-log" id="chatLog"></div>
       <div class="voice-input-frame">
-        <input type="text" id="userInput" placeholder="Yaya에게 오늘 기분을 말해줘..." />
+        <input type="text" id="userInput" placeholder="Tell Yaya how you're feeling today..." />
         <span style="display:flex; align-items:center; gap:6px;">
           <span id="chatCounter" style="font-size:11px; color:#caa460; font-weight:700;">7/10 💬</span>
           <span class="mic-icon" id="sendBtn">🎙️</span>
