@@ -136,42 +136,6 @@
       box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
     }
 
-    /* 중단 좌측: 가장 중요한 리마인드 알림 보드 */
-    .critical-remind-board {
-      position: absolute;
-      left: 16px;
-      bottom: 165px;
-      width: 180px;
-      z-index: 10;
-      background: rgba(51, 29, 23, 0.88);
-      border: 2px solid #caa460;
-      border-radius: 14px;
-      padding: 8px 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-    }
-    
-    .board-header {
-      color: #ffd700;
-      font-size: 12px;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 4px;
-      letter-spacing: 0.5px;
-    }
-    
-    .board-body {
-      font-size: 11px;
-      line-height: 1.4;
-      color: #f7ebe1;
-      font-weight: 400;
-    }
-    
-    .board-body span {
-      display: block;
-      margin-bottom: 3px;
-    }
-
     /* 중단 우측: 16비트 그래픽스 독립형 레이어 */
     .pixel-character-box {
       position: absolute;
@@ -408,14 +372,6 @@
       </div>
     </div>
 
-    <div class="critical-remind-board">
-      <div class="board-header">**가장 중요한 리마인드**</div>
-      <div class="board-body">
-        <span>- 나쁜 패턴 'All or Nothing' 극단성 워닝 🚨 (집중과 휴식의 균형)</span>
-        <span>- '찍어누르는 사람'에게 안정감 느끼는 'RANK 0' Authority Trap 경계 🔥 (진정한 존중 관계 추구)</span>
-      </div>
-    </div>
-
     <div class="pixel-character-box">
       <img src="yaya_16bit.png" alt="Yaya Digital 16bit Handheld">
     </div>
@@ -602,8 +558,6 @@
         if (reminders.length) {
           document.getElementById('reminderList').innerHTML =
             reminders.map(r => `<div style="margin-bottom:4px;">${r}</div>`).join('');
-          document.querySelector('.critical-remind-board .board-body').innerHTML =
-            reminders.map(r => `<span>${r}</span>`).join('');
         }
       }
 
